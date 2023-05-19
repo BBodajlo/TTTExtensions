@@ -101,7 +101,22 @@ int main(int argc, char** argv)
         while((bytes = read(sock, recvBuf, BUFFERLEN)) > 0)
         {
             //printf("This is bytes: %d\n", bytes);
+            int bytesToRead = 0;
             printf("%s\n", recvBuf);
+            
+            if(findMessage(recvBuf) == WAIT)
+            {
+                puts("WAIT");
+            }
+            else if(findMessage(recvBuf) == MOVE)
+            {
+                puts("OKAY");
+            }
+            else if(findMessage(recvBuf) == BEGN)
+            {
+                bytesToRead = getNumOfBytesToRead(recvBuf)
+            
+            }
             if(readOver(recvBuf) == TRUE)
             {
                 puts("Server has ended the game");

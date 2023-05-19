@@ -642,11 +642,11 @@ int findMessage(char *buffer)
     char protocolMessage[6];
     memcpy(protocolMessage, buffer, PROTOCOLSTARTLEN);
     protocolMessage[5] = '\0';
-    puts("in find message");
-    printf("readMessage: %s\n", protocolMessage);
+    //puts("in find message");
+    //printf("readMessage: %s\n", protocolMessage);
     if(strcmp(protocolMessage, messageTypes[MOVE]) == 0)
     {
-        puts("leaving find message");
+       // puts("leaving find message");
         return(MOVE);
     }
     else if(strcmp(protocolMessage, messageTypes[RSGN]) == 0)
@@ -656,6 +656,14 @@ int findMessage(char *buffer)
     else if(strcmp(protocolMessage, messageTypes[DRAW]) == 0)
     {
         return(DRAW);
+    }
+    else if(strcmp(protocolMessage, messageTypes[WAIT]) == 0)
+    {
+        return(WAIT);
+    }
+    else if(strcmp(protocolMessage, messageTypes[BEGN]) == 0)
+    {
+        return(BEGN);
     }
     else{
         return -1;
