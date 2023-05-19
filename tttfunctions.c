@@ -308,7 +308,7 @@ int getNumOfBytesToRead(int sock, char *buf)
     while(1)
     {
         int bytes = read(sock, buf, 1);
-        printf("numtoreadfun: %s\n", buf);
+        //printf("numtoreadfun: %s\n", buf);
         if(bytes == 0)
         {
             free(numOfBytes);
@@ -325,7 +325,7 @@ int getNumOfBytesToRead(int sock, char *buf)
                 }
                 else{
                     numOfBytes = (char *)realloc(numOfBytes, intSpot+1);
-                    printf("numofBytes : %c\n", numOfBytes[0]);
+                    //printf("numofBytes : %c\n", numOfBytes[0]);
                     numOfBytes[intSpot] = buf[0];
                     intSpot++;
                 }
@@ -334,8 +334,8 @@ int getNumOfBytesToRead(int sock, char *buf)
             {
                 numOfBytes = (char *)realloc(numOfBytes, intSpot+1);
                 numOfBytes[intSpot] = '\0';
-                printf("numofBytes : %c\n", numOfBytes[1]);
-                printf("numofBytes : %s\n", numOfBytes);
+               // printf("numofBytes : %c\n", numOfBytes[1]);
+               // printf("numofBytes : %s\n", numOfBytes);
                 int returnValue = atoi(numOfBytes);
                 free(numOfBytes);
                 return returnValue;
@@ -954,6 +954,29 @@ void sendINVLMessage(int player1, char *reason)
     free(finalMessage);
     free(msg);
 
+
+}
+
+char *toStringPLAY(playMessage* playMsg)
+{
+    char *msg = (char *)malloc(sizeof(char)*BUFSIZE);
+
+    sprintf(msg, "%s|%ld|%s|", playMsg->play, strlen(playMsg->name)+1, playMsg->name);
+    return(msg);
+    
+}
+
+void sendPLAYMessage(int server, char *name)
+{
+    playMessage *msg = (playMessage*)malloc(sizeof(playMessage));
+
+    msg->play = "PLAY";
+    msg->name = name;
+
+    char *finalMessage = toStringPLAY(msg);
+    write(server, finalMessage, BUFSIZE);
+    free(finalMessage);
+    free(msg);
 
 }
 

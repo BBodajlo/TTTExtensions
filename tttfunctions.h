@@ -59,6 +59,11 @@ typedef struct playArgs{
     game_t *currentGame;
 }playArgs_t;
 
+typedef struct readInputArgs
+{
+    int sock;
+}readInputArgs_t;
+
 //Enum for true and false
 enum trueFalse{FALSE, TRUE};
 
@@ -151,5 +156,7 @@ char* toStringINVL(invalidMessage *);
 void sendINVLMessage(int , char *);
 void* gameLoop(void*);
 int removeConn(currentConnections_t **,  currentConnections_t *, currentConnections_t *);
+char *toStringPLAY(playMessage* );
+void sendPLAYMessage(int , char *);
 #endif
 

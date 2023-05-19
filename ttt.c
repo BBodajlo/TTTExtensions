@@ -7,6 +7,7 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/wait.h>
+#include <pthread.h>
 #include "tttfunctions.h"
 
 #define BUFFERLEN 256
@@ -66,6 +67,54 @@ int readOver(char *buf)
     return(FALSE);
 }
 
+void* readFromServer(void *args)
+{
+    readInputArgs_t *arguments = (readInputArgs_t*)args;
+    int sock = arguments->sock;
+    free(arguments);
+    char startMsg[BUFFERLEN];
+    read(sock, startMsg, 49);
+    printf("%s\n", startMsg);
+    while(TRUE)
+    {
+        char recvBuf[BUFFERLEN];
+        //printf("This is bytes: %d\n", bytes);
+        int bytesToRead = 0;
+
+        read(sock, recvBuf, PROTOCOLSTARTLEN);
+        //printf("%s\n", recvBuf);
+        
+        if(findMessage(recvBuf) == WAIT)
+        {
+            puts("WAIT");
+            read(sock, recvBuf, 2);
+        }
+        else if(findMessage(recvBuf) == MOVE)
+        {
+            puts("OKAY");
+        }
+        else if(findMessage(recvBuf) == BEGN)
+        {
+            bytesToRead = getNumOfBytesToRead(sock, recvBuf);
+            read(sock, recvBuf, bytesToRead);
+            //printf("This is buffer from begn: %s\n", recvBuf);
+            printf("Your role is: %c\n", recvBuf[0]);
+            puts("");
+            
+
+        }
+        if(readOver(recvBuf) == TRUE)
+        {
+            puts("Server has ended the game");
+            break;
+        }
+        memset(recvBuf,0,BUFFERLEN);
+    }
+
+
+}
+
+
 
 // Main function
 // This is where all of the logic/decision making will go for the client side
@@ -76,7 +125,7 @@ int main(int argc, char** argv)
     int bytes; // Number of bytes the client has read from std input
 
     char buf[BUFFERLEN];
-    char recvBuf[BUFFERLEN];
+    
 
     // The client needs to have a host and port as args
     // ./ttt localhost 50000
@@ -93,38 +142,18 @@ int main(int argc, char** argv)
     {
         exit(EXIT_FAILURE);
     }
-    //printf("here");
-    int id = fork();
 
-    if(id == 0)
+    pthread_t readInput;
+    readInputArgs_t *inputArgs = (readInputArgs_t*)malloc(sizeof(readInputArgs_t));
+    inputArgs->sock = sock;
+    int p2ThreadError = pthread_create(&readInput, NULL, readFromServer, (void*)inputArgs);
+    if(p2ThreadError != 0)
     {
-        while((bytes = read(sock, recvBuf, BUFFERLEN)) > 0)
-        {
-            //printf("This is bytes: %d\n", bytes);
-            int bytesToRead = 0;
-            printf("%s\n", recvBuf);
-            
-            if(findMessage(recvBuf) == WAIT)
-            {
-                puts("WAIT");
-            }
-            else if(findMessage(recvBuf) == MOVE)
-            {
-                puts("OKAY");
-            }
-            else if(findMessage(recvBuf) == BEGN)
-            {
-                bytesToRead = getNumOfBytesToRead(recvBuf)
-            
-            }
-            if(readOver(recvBuf) == TRUE)
-            {
-                puts("Server has ended the game");
-                break;
-            }
-            memset(recvBuf,0,BUFFERLEN);
-        }
+        perror("pthread_create failed");
+        return -1;
     }
+    pthread_detach(readInput);
+
     if(argc > 3)
     {
         if(strcmp(argv[3], "Regular") == 0)
@@ -148,6 +177,13 @@ int main(int argc, char** argv)
     //write(sock, "PLAY|5|JOHN|MOVE|6|X|3,3|MOVE|6|X|2,2|RSGN|0|MOVE|6|X|1,1|", 59);
      //write(sock, "PLAY|5|JOHN|", 61);
     // Main logic loop to just continally send messages to the server
+
+    //Going to send the play message
+    char name[BUFSIZE];
+    read(STDIN_FILENO, name, BUFFERLEN);
+    sendPLAYMessage(sock, name);
+
+
     while((bytes = read(STDIN_FILENO, buf, BUFFERLEN)) > 0)
     {
        
@@ -160,10 +196,6 @@ int main(int argc, char** argv)
         
     }
     close(sock);
-    if(id != 0)
-    {
-        wait(0);
-    }
     return EXIT_SUCCESS;
 }
 
